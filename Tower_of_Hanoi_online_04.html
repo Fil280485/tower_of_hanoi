@@ -8,7 +8,7 @@
   body {
     margin: 0;
     font-family: Arial, sans-serif;
-    background: url('images/room.png') no-repeat center center fixed;
+    background: url('room.png') no-repeat center center fixed;
     background-size: cover;
   }
   #title-screen, #instructions-screen, #win-screen {
@@ -34,7 +34,7 @@
   .peg {
     width: 80px;
     height: 220px;
-    background: url('images/peg.png') no-repeat center bottom;
+    background: url('peg.png') no-repeat center bottom;
     background-size: contain;
     position: relative;
     margin: 0 40px;
@@ -81,12 +81,12 @@
 
 <!-- Title Screen -->
 <div id="title-screen" style="display:block;">
-    <img src="images/titlescreen.png" alt="lor:white;"></p>
+    <img src="titlescreen.png" alt="lor:white;"></p>
 </div>
 
 <!-- Instructions Screen -->
 <div id="instructions-screen" style="display:none;">
-    <img src="images/instructions.png" alt="lor:white;"></p>    
+    <img src="instructions.png" alt="lor:white;"></p>    
 </div>
 
 <!-- Game Screen -->
@@ -114,9 +114,9 @@ let invalidDropLocation = 0;
 let gameLog = [];
 
 const discs = [
-  {id: 'disc1', src: 'images/disc1.png', width: 110},
-  {id: 'disc2', src: 'images/disc2.png', width: 138},
-  {id: 'disc3', src: 'images/disc3.png', width: 182}
+  {id: 'disc1', src: 'disc1.png', width: 110},
+  {id: 'disc2', src: 'disc2.png', width: 138},
+  {id: 'disc3', src: 'disc3.png', width: 182}
 ];
 
 document.body.addEventListener('click', () => {

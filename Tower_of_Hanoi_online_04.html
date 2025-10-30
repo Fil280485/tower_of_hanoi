@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Tower of Hanoi</title>
+<style>
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: url('images/room.png') no-repeat center center fixed;
+    background-size: cover;
+  }
+  #title-screen, #instructions-screen, #win-screen {
+    text-align: center;
+    margin-top: 50px;
+  }
+  #title-screen img, #instructions-screen img, #win-screen img {
+    max-width: 80%;
+  }
+  #game-container {
+    display: none;
+    text-align: center;
+    padding-top: 50px;
+  }
+  .peg-area {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    height: 400px; /* Increased so plank fits */
+    position: relative;
+    margin-top: 50px;
+  }
+  .peg {
+    width: 80px;
+    height: 220px;
+    background: url('images/peg.png') no-repeat center bottom;
+    background-size: contain;
+    position: relative;
+    margin: 0 40px;
+    margin-bottom: 0px; /* Peg sits on plank */
+  }
+  .disc {
+    position: absolute;
+    cursor: grab;
+  }
+  /* Blue plank under pegs */
+  .base {
+    width: 700px; /* Wide enough for all pegs */
+    height: 50px;
+    background-color: #3b82f6; /* Blue color */
+    position: relative;
+    bottom: 0; /* Inside peg-area */
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    z-index: 0;
+  }
+  #move-counter {
+    font-size: 24px;
+    color: white;
+    margin-top: 20px;
+  }
+  #restart-btn {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 18px;
+    background-color: #ff6600;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  #restart-btn:hover {
+    background-color: #e65c00;
+  }
+</style>
+</head>
+<body>
+
+<!-- Title Screen -->
+<div id="title-screen" style="display:block;">
+    <img src="images/titlescreen.png" alt="lor:white;"></p>
+</div>
+
+<!-- Instructions Screen -->
+<div id="instructions-screen" style="display:none;">
+    <img src="images/instructions.png" alt="lor:white;"></p>    
+</div>
+
+<!-- Game Screen -->
+<div id="game-container">
+    <div class="peg-area">
+        <div class="peg" id="peg1"></div>
+        <div class="peg" id="peg2"></div>
+        <div class="peg" id="peg3"></div>
+    </div>
+    <div class="base"></div>
+    <div id="move-counter">Moves: 0</div>    
+</div>
+
+<!-- Win Screen -->
+<div id="win-screen" style="display:none;">
+    <img src="images/welldone.png" alt="lor:white;"></p>    
+</div>
+
+<script>
+let currentScreen = 'title';
+let moves = 0;
+let startTime;
+let invalidBigOnSmall = 0;
+let invalidDropLocation = 0;
+let gameLog = [];
+
+const discs = [
+  {id: 'disc1', src: 'images/disc1.png', width: 110},
+  {id: 'disc2', src: 'images/disc2.png', width: 138},
+  {id: 'disc3', src: 'images/disc3.png', width: 182}
+];
+
+document.body.addEventListener('click', () => {
+  if (currentScreen === 'title') {
+    document.getElementById('title-screen').style.display = 'none';
+    document.getElementById('instructions-screen').style.display = 'block';
+    currentScreen = 'instructions';
+  } else if (currentScreen === 'instructions') {
+    document.getElementById('instructions-screen').style.display = 'none';
+    document.getElementById('game-container').style.display = 'block';
+    currentScreen = 'game';
+    initGame();
+  }
+});
+
+function initGame() {
+  moves = 0;
+  invalidBigOnSmall = 0;
+  invalidDropLocation = 0;
+  gameLog = [];
+  startTime = Date.now();
+  document.getElementById('move-counter').textContent = `Moves: ${moves}`;
+  document.querySelectorAll('.peg').forEach(peg => peg.innerHTML = '');
+  const peg1 = document.getElementById('peg1');
+  discs.slice().reverse().forEach((disc, index) => {
+    const img = document.createElement('img');
+    img.src = disc.src;
+    img.className = 'disc';
+    img.id = disc.id;
+    img.style.width = disc.width + 'px';
+    img.style.bottom = (index * 40) + 'px';
+    img.style.left = '50%';
+    img.style.transform = 'translateX(-50%)';
+    img.dataset.size = disc.width;
+    peg1.appendChild(img);
+  });
+  updateDraggable();
+}
+
+function updateDraggable() {
+  document.querySelectorAll('.disc').forEach(d => d.setAttribute('draggable', 'false'));
+  document.querySelectorAll('.peg').forEach(peg => {
+    const pegDiscs = peg.querySelectorAll('.disc');
+    if (pegDiscs.length > 0) {
+      const topDisc = pegDiscs[pegDiscs.length - 1];
+      topDisc.setAttribute('draggable', 'true');
+      makeDraggable(topDisc);
+    }
+  });
+}
+
+function makeDraggable(element) {
+  element.addEventListener('dragstart', e => {
+    e.dataTransfer.setData('text/plain', element.id);
+  });
+}
+
+document.querySelectorAll('.peg').forEach(peg => {
+  peg.addEventListener('dragover', e => e.preventDefault());
+  peg.addEventListener('drop', e => {
+    e.preventDefault();
+    const discId = e.dataTransfer.getData('text/plain');
+    const disc = document.getElementById(discId);
+    const currentPeg = disc.parentElement;
+    if (currentPeg === peg) {
+      invalidDropLocation++;
+      return;
+    }
+    const pegDiscs = Array.from(peg.querySelectorAll('.disc'));
+    const topDisc = pegDiscs[pegDiscs.length - 1];
+    if (!topDisc || parseInt(disc.dataset.size) < parseInt(topDisc.dataset.size)) {
+      peg.appendChild(disc);
+      disc.style.bottom = (pegDiscs.length * 40) + 'px';
+      moves++;
+      document.getElementById('move-counter').textContent = `Moves: ${moves}`;
+
+      const timeSpent = Date.now() - startTime;
+      gameLog.push([timeSpent, moves, invalidBigOnSmall, invalidDropLocation]);
+
+      updateDraggable();
+      checkWin();
+    } else {
+      invalidBigOnSmall++;
+    }
+  });
+});
+
+function checkWin() {
+  const peg3Discs = document.querySelectorAll('#peg3 .disc');
+  if (peg3Discs.length === discs.length) {
+    document.getElementById('game-container').style.display = 'none';
+    document.getElementById('win-screen').style.display = 'block';
+    saveGameData();
+  }
+}
+
+function saveGameData() {
+  let csvContent = "data:text/csv;charset=utf-8,"
+    + "TimeSpent(ms),StepCounter,Mistakes_BiggerOnSmaller,InvalidPlacements\n"
+    + gameLog.map(row => row.join(",")).join("\n");
+
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", "tower_of_hanoi_data.csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+document.getElementById('restart-btn').addEventListener('click', initGame);
+</script>
+
+</body>
+</html>
